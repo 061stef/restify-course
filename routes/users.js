@@ -55,7 +55,7 @@ module.exports = (server) => {
             const user = await auth.authenticate(email, password);
 
             // create JWT token
-            const token = jsonwebtoken.sign(user.toJSON(), config.JWT_SECRET, { expiresIn: '15m' });
+            const token = jsonwebtoken.sign(user.toJSON(), config.JWT_SECRET, { expiresIn: '30m' });
 
             const { iat, exp } = jsonwebtoken.decode(token);
 

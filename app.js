@@ -15,7 +15,7 @@ server.use((req, res, next) => {
 });
 
 server.get('/parolaccia', (req, res, next) => {
-    res.send('Afammokk')
+    res.send({message: 'Afammok'})
 });
 server.get('/hello/:name', (req, res, next) => {
 
@@ -29,9 +29,12 @@ server.get('/hello/:name', (req, res, next) => {
 
 
 
-server.listen(config.PORT, () => {
-    mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true })
+server.listen(config.PORT, async () => {
+    await mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true })
     console.log('server listen on port ' + config.PORT);
+    require('./routes/customers')(server);
+    require('./routes/users')(server);
+    console.log('Service Started on port ' + config.PORT);
 })
 
 const db = mongoose.connection;
@@ -39,7 +42,6 @@ const db = mongoose.connection;
 db.on('error', (err) => { console.log(err); });
 
 db.once('open', () => {
-    require('./routes/customers')(server);
-    require('./routes/users')(server);
-    console.log('Service Started on port ' + config.PORT);
+   
+    
 })
