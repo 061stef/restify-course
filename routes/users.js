@@ -19,6 +19,16 @@ module.exports = (server) => {
         }
     });
 
+    server.del('/users/all',  rjwt({ secret: config.JWT_SECRET }), async function (req, res, next) {
+        try{
+            const deleted = await User.deleteMany();
+            res.send(200, { deleted: deleted});
+            next();
+        }catch (err) {
+            return next(new errors.InternalServerError('Server Error'));
+        }
+    })
+
     server.post('/register', async (req, res, next) => {
         const { email, password } = req.body;
         try {
