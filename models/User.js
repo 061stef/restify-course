@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+        unique: true,
     },
     password:{
         type: String,
@@ -12,8 +13,9 @@ const UserSchema = new mongoose.Schema({
     },
     role:{
         type: String,
-        required: true,
-        default: 'simple'
+    },
+    status:{
+        type: String,
     }
 });
 

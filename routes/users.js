@@ -4,27 +4,48 @@ const bycript = require('bcryptjs');
 const auth = require('../auth');
 const jsonwebtoken = require('jsonwebtoken');
 const config = require('../config');
+const rjwt = require('restify-jwt-community');
 
 module.exports = (server) => {
 
+    server.get('/users', rjwt({ secret: config.JWT_SECRET }), async (req, res, next) => {
+        try {
+            const users = await User.find().where('status').equals('active');
+            res.send(200, users);
+            next();
+
+        } catch (err) {
+            return next(new errors.InternalServerError('Server Error'));
+        }
+    });
+
     server.post('/register', async (req, res, next) => {
         const { email, password } = req.body;
-        const user = new User({ email, password });
-        bycript.genSalt(10, (err, salt) => {
-            bycript.hash(user.password, salt, async (err, hash) => {
-                // Hash password is
-                user.password = hash;
-                // Save User
-                try {
-                    const newUser = await user.save();
-                    res.send(201);
-                    next()
-                } catch (err) {
-                    return next(new errors.InternalError(err.message));
-                }
+        try {
+            const userExists = await User.findOne({ email: email});
+            if(userExists) {
+                return res.send(409, {code: 'duplicated', message: 'User already exists'})
+            }
+            const user = new User({ email, password });
+            bycript.genSalt(10, (err, salt) => {
+                bycript.hash(user.password, salt, async (err, hash) => {
+                    // Hash password is
+                    user.password = hash;
+                    // Save User
+                    try {
+                        const newUser = await user.save();
+                        res.send(201);
+                        next()
+                    } catch (err) {
+                        return next(new errors.InternalError(err.message));
+                    }
 
-            });
-        })
+                });
+            })
+        }catch (error) {
+            return next(new errors.duplicateError(error.message));
+        }
+        
     })
 
     //auth Users
@@ -58,7 +79,7 @@ module.exports = (server) => {
                 const { _id } = user;
                 const findUser = await User.findById(_id);
                 res.send(findUser);
-            }else{
+            } else {
                 res.send(404, 'User Not Found');
             }
             next()
@@ -66,6 +87,18 @@ module.exports = (server) => {
             return next(new errors.UnauthorizedError('Unauthorized'));
         }
 
+
+    });
+
+    server.del('/users/:id', async function (req, res, next) {
+        try {
+            const { id } = req.params;
+            const user = await User.findOneAndDelete({ _id: id });
+            res.send(200, 'User Deleted');
+            next();
+        } catch (err) {
+            return next(new errors.BadRequestError('User not exist'));
+        }
 
     })
 }
